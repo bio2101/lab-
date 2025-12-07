@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timed Practice Test</title>
+    <script src="questions.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="quiz-container">
+            
+            <div id="hud">
+                <a href="index.html" class="btn btn-secondary" style="margin: 0; padding: 8px 15px; font-size: 14px;">Home</a>
+                <h3>Total Questions: 30</h3>
+                <span id="timer" class="score-time">45:00</span>
+            </div>
+            
+            <div id="results-container" class="hidden">
+                <h1 style="color: #28a745;">Test Complete!</h1>
+                <h2 id="final-score" style="margin-top: 10px;">Score: 0 / 30 (0.0%)</h2>
+                <p>Time Taken: <span id="time-taken"></span></p>
+                
+                <div class="controls">
+                    <button id="try-again-btn" class="btn btn-primary" onclick="resetQuiz()">Try Again</button>
+                    <a href="index.html" class="btn btn-secondary">Main Page</a>
+                </div>
+                <hr style="margin: 25px 0;">
+                <h2 style="color: #1a2b4d;">Review Your Answers</h2>
+                <div id="review-section"></div>
+            </div>
+
+            <form id="test-form-container">
+                </form>
+
+            <div class="controls" id="quiz-controls">
+                <button id="submit-btn" class="btn btn-primary" onclick="submitQuiz()">Submit Test</button>
+                <a href="index.html" class="btn btn-secondary">Main Page</a>
+            </div>
+            
+        </div>
+    </div>
+    
+    <script>
+        // Global variables updated for 30 questions
+        const quizForm = document.getElementById('test-form-container');
+        const timerDisplay = document.getElementById('timer');
+        const resultsContainer = document.getElementById('results-container');
+        const reviewSection = document.getElementById('review-section');
+        const submitButton = document.getElementById('submit-btn');
+        const quizControls = document.getElementById('quiz-controls');
+        
+        const totalQuestions = 30;
+        const totalTime = 45 * 60; 
+        let timeLeft = totalTime;
+        let timerInterval;
+
+        // --- Utility Functions (for shuffling questions) ---
+        function getRandomSubset(arr, size) {
+            // Check if arr is defined and is an array before attempting slice/sort
+            if (!Array.isArray(arr) || arr.length === 0) return [];
+            const shuffled = arr.slice(0).sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, size);
+        }
+
+        // --- 1. Question Generation ---
+        function generateTest() {
+            // Check for question data before proceeding
+            if (typeof allQuestions === 'undefined' || !allQuestions.mcq || !allQuestions.tf || !allQuestions.fill) {
+                quizForm.innerHTML = "<h1>Error: Question data missing. Check questions.js file.</h1>";
+                clearInterval(timerInterval); // Stop timer if data fails
+                return;
+            }
+
+            // Get 10 random questions of each type
+            const mcq = getRandomSubset(allQuestions.mcq, 10);
+            const tf = getRandomSubset(allQuestions.tf, 10);
+            const fill = getRandomSubset(allQuestions.fill, 10);
+            
+            let allQ = [...mcq, ...tf, ...fill]; // Combined array
+            let html = '';
+            let qNum = 1;
+
+            allQ.forEach((q, index) => {
+                const type = (index < 10) ? 'mcq' : (index < 20) ? 'tf' : 'fill';
+                html += renderQuestion(q, qNum++, index, type);
+            });
+
+            quizForm.innerHTML = html;
+        }
+
+        function renderQuestion(qData, qNum, index, type) {
+            const uniqueId = `q-${index}`; 
+            let optionsHtml = '';
+
+            if (type === 'mcq') {
+                qData.options.forEach((option, i) => {
+                    optionsHtml += `
+                        <label class="test-option-label">
+                            <input type="radio" name="${uniqueId}" value="${option}">
+                            ${String.fromCharCode(65 + i)}. ${option}
+                        </label>`;
+                });
+            } else if (type === 'tf') {
+                optionsHtml = `
+                    <label class="test-option-label"><input type="radio" name="${uniqueId}" value="true"> True</label>
+                    <label class="test-option-label"><input type="radio" name="${uniqueId}" value="false"> False</label>`;
+            } else if (type === 'fill') {
+                optionsHtml = `<input type="text" name="${uniqueId}" placeholder="Type your answer here">`;
+            }
+
+            return `
+                <div class="test-question-block" data-answer="${qData.answer}" data-type="${type}" data-key="${uniqueId}">
+                    <h3>${qNum}. ${qData.q}</h3>
+                    <div class="option-group">${optionsHtml}</div>
+                </div>`;
+        }
+
+        // --- 2. Timer Logic ---
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Time's up! Submitting your test automatically.");
+                    submitQuiz();
+                }
+            }, 1000);
+        }
+
+        // --- 3. Submission and Grading ---
+        function submitQuiz() {
+            if (submitButton.disabled) return;
+            
+            clearInterval(timerInterval);
+            submitButton.disabled = true;
+            quizControls.classList.add('hidden');
+            
+            // Calculate time taken
+            const timeTaken = totalTime - timeLeft;
+            const minutes = Math.floor(timeTaken / 60);
+            const seconds = timeTaken % 60;
+            
+            let score = 0;
+            const questionBlocks = document.querySelectorAll('.test-question-block');
+            
+            questionBlocks.forEach((block) => {
+                const type = block.getAttribute('data-type');
+                const rawCorrectAnswer = block.getAttribute('data-answer');
+                const correctAnswer = rawCorrectAnswer.toLowerCase().trim();
+                let isCorrect = false;
+                let userAnswerRaw = '';
+
+                // Disable all inputs in the question block and collect user answer
+                block.querySelectorAll('input').forEach(input => {
+                    input.disabled = true;
+                    if (type !== 'fill' && input.checked) {
+                        userAnswerRaw = input.value;
+                    } else if (type === 'fill' && input.type === 'text') {
+                        userAnswerRaw = input.value;
+                    }
+                });
+
+                if (userAnswerRaw) {
+                    let userAnswer = userAnswerRaw.toLowerCase().trim();
+                    
+                    if (type === 'fill') {
+                        const normalizedUser = userAnswer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                        const normalizedCorrect = correctAnswer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                        isCorrect = (normalizedUser === normalizedCorrect);
+                    } else {
+                        isCorrect = (userAnswer === correctAnswer);
+                    }
+                }
+
+                // Apply correct/wrong class for review styling
+                if (isCorrect) {
+                    score++;
+                    block.classList.add('review-correct');
+                } else {
+                    block.classList.add('review-wrong');
+                }
+                
+                // Add feedback/correct answer text below the question
+                let feedbackHtml = '';
+                if (isCorrect) {
+                    feedbackHtml = `<span class="feedback-text review-correct">✅ Correct!</span>`;
+                } else {
+                    feedbackHtml = `<span class="feedback-text review-wrong">❌ Incorrect. Correct Answer: ${rawCorrectAnswer}</span>`;
+                }
+                
+                // Append feedback to the question block
+                block.querySelector('h3').insertAdjacentHTML('afterend', feedbackHtml);
+            });
+
+            // Update Results Container
+            const finalScorePercentage = ((score / totalQuestions) * 100).toFixed(1);
+            document.getElementById('final-score').textContent = `Score: ${score} / ${totalQuestions} (${finalScorePercentage}%)`;
+            document.getElementById('time-taken').textContent = `${minutes} min ${seconds} sec`;
+            
+            // MOVE THE GRADED QUESTIONS TO THE REVIEW SECTION
+            reviewSection.appendChild(quizForm); 
+            
+            // Show results container
+            resultsContainer.classList.remove('hidden');
+            
+            // Scroll to the top to see the results
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        }
+
+        // --- 4. Try Again Function ---
+        function resetQuiz() {
+            window.location.reload(); 
+        }
+
+        // Initialize the test after the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            generateTest();
+            startTimer();
+        });
+    </script>
+</body>
+</html>

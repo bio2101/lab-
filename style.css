@@ -1,0 +1,302 @@
+/* Basic Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Container Spacing Logic */
+body:has(#quiz-container) .container {
+    padding-top: 20px;
+    margin-top: 20px;
+}
+/* Exception for Timed Test with HUD */
+body:has(#hud) .container {
+    padding-top: 90px;
+    margin-top: 0;
+}
+/* Homepage container remains normal */
+body:has(#home) .container {
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+h1, h2, h3 {
+    color: #1a2b4d;
+}
+
+/* Homepage */
+#home {
+    text-align: center;
+    padding: 40px 0;
+}
+
+#home .container {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#home h1 {
+    margin-bottom: 40px;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    margin: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background-color: #28a745; /* Green - Submit / Try Again */
+}
+.btn-primary:hover {
+    background-color: #218838;
+}
+
+.btn-secondary {
+    background-color: #6c757d; /* Gray - Home / Next */
+}
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Quiz Container (Shared) */
+#quiz-container {
+    /* Base for both test pages */
+}
+
+/* === Test Bank (One-by-one) Styles === */
+.question-block {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.question-block h2 { /* Targeting the Q number/text */
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #1a2b4d;
+}
+
+/* Options container for MCQ/T/F */
+.options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.option:hover:not(.disabled) {
+    background-color: #e9ecef;
+}
+
+.option.selected {
+    background-color: #cce5ff;
+    border-color: #007bff;
+}
+
+.option.disabled {
+    pointer-events: none;
+}
+.options-grid.disabled {
+    pointer-events: none;
+}
+
+/* Fill-in-the-Blank input style */
+#fill-input {
+    width: 98%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    margin-top: 5px;
+}
+
+/* Feedback for Test Bank */
+#feedback {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+#feedback.correct {
+    background-color: #d4edda;
+    border: 1px solid #28a745;
+    color: #155724;
+}
+#feedback.wrong {
+    background-color: #f8d7da;
+    border: 1px solid #dc3545;
+    color: #721c24;
+}
+#feedback p {
+    margin: 0;
+}
+
+/* --- Timed Test Specific Styles --- */
+.test-question-block {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.test-question-block h3 {
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.test-option-label {
+    display: block;
+    padding: 10px 12px;
+    margin: 5px 0;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.test-option-label:hover {
+    background-color: #e9ecef;
+}
+
+/* Fill-in-the-Blank input for Timed Test */
+.test-question-block input[type="text"] {
+    width: 95%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+/* Review Styles (for Timed Test results) */
+.test-question-block.review-correct {
+    background-color: #d4edda !important;
+    border-color: #28a745 !important;
+    color: #155724;
+}
+
+.test-question-block.review-wrong {
+    background-color: #f8d7da !important;
+    border-color: #dc3545 !important;
+    color: #721c24;
+}
+
+.feedback-text {
+    font-weight: 600;
+    margin-top: 5px;
+    display: block;
+    padding: 5px 0;
+}
+
+
+/* === HUD & Controls === */
+#hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    
+    position: fixed; 
+    top: 0;
+    left: 0;
+    right: 0;
+    
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    z-index: 1000;
+    
+    padding: 15px 0; 
+    
+    max-width: 800px;
+    margin: 0 auto;
+    
+    box-sizing: border-box; 
+    padding-left: 20px; 
+    padding-right: 20px;
+}
+
+#hud h3 {
+    margin: 0; 
+    font-size: 1.1em;
+    font-weight: 500;
+}
+#hud .score-time {
+    font-size: 1.3em;
+    font-weight: 700;
+}
+
+#timer {
+    color: #dc3545; 
+    font-weight: 700;
+}
+
+/* Controls */
+.controls {
+    margin-top: 30px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+.controls .btn {
+    margin: 0;
+}
+
+/* Results Page */
+.hidden {
+    display: none !important;
+}
+
+#results-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#review-section {
+    margin-top: 20px;
+    text-align: left;
+}

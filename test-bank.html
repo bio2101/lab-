@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bank</title>
+    <script src="questions.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div id="quiz-container">
+            <h1>Question Bank Practice</h1>
+            
+            <div id="question-area" class="question-block">
+                <div id="question-header">
+                    <h2 id="question-text">Loading question...</h2>
+                </div>
+                
+                <div id="options-container" class="options-grid">
+                    </div>
+                    
+                <input type="text" id="fill-input" placeholder="Type your answer here" style="display: none;">
+                
+                <div id="feedback" class="hidden"></div>
+            </div>
+
+            <div class="controls">
+                <button id="check-btn" class="btn btn-primary" onclick="checkAnswer()">Check Answer</button>
+                <button id="next-btn" class="btn btn-secondary hidden" onclick="loadNextQuestion()">Next Question</button>
+                <a href="index.html" class="btn btn-secondary">Home</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- Test Bank Specific JavaScript Logic ---
+        
+        // This is where we store the full shuffled list of questions.
+        let shuffledQuestions = []; 
+        let currentQuestionIndex = 0;
+        let questionNumber = 1;
+        
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const fillInput = document.getElementById('fill-input');
+        const feedbackEl = document.getElementById('feedback');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        // --- Utility Functions ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // --- Core Logic ---
+        function initializeTestBank() {
+            if (typeof allQuestions === 'undefined') {
+                questionTextEl.textContent = "Error: Question data file (questions.js) failed to load.";
+                return;
+            }
+            
+            const mcq = allQuestions.mcq;
+            const tf = allQuestions.tf;
+            const fill = allQuestions.fill;
+
+            // Mark question types
+            mcq.forEach(q => q.type = 'mcq');
+            tf.forEach(q => q.type = 'tf');
+            fill.forEach(q => q.type = 'fill');
+
+            shuffledQuestions = shuffleArray([...mcq, ...tf, ...fill]);
+            
+            loadNextQuestion();
+        }
+
+        function loadNextQuestion() {
+            // Check if we have reached the end of the question bank
+            if (currentQuestionIndex >= shuffledQuestions.length) {
+                questionTextEl.textContent = "You have completed all questions! Click Home to restart.";
+                optionsContainer.innerHTML = '';
+                fillInput.style.display = 'none';
+                checkBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+                return;
+            }
+
+            const qData = shuffledQuestions[currentQuestionIndex];
+            
+            // Reset state
+            optionsContainer.innerHTML = '';
+            feedbackEl.classList.add('hidden');
+            feedbackEl.className = 'hidden';
+            checkBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            fillInput.disabled = false;
+            
+            // Set question text and increment number for display
+            questionTextEl.textContent = `${questionNumber}. ${qData.q}`;
+            questionNumber++;
+            
+            // Handle display based on type
+            if (qData.type === 'mcq' || qData.type === 'tf') {
+                optionsContainer.style.display = 'flex';
+                fillInput.style.display = 'none';
+                renderOptions(qData);
+            } else if (qData.type === 'fill') {
+                optionsContainer.style.display = 'none';
+                fillInput.style.display = 'block';
+                fillInput.value = '';
+            }
+        }
+
+        function renderOptions(qData) {
+            const options = qData.type === 'mcq' ? qData.options : ['True', 'False'];
+            optionsContainer.innerHTML = '';
+            
+            options.forEach((option, index) => {
+                const optionEl = document.createElement('div');
+                optionEl.classList.add('option');
+                optionEl.textContent = qData.type === 'mcq' ? `${String.fromCharCode(65 + index)}. ${option}` : option;
+                optionEl.setAttribute('data-value', option.toLowerCase());
+                optionEl.onclick = function() {
+                    selectOption(optionEl);
+                };
+                optionsContainer.appendChild(optionEl);
+            });
+        }
+
+        function selectOption(selectedEl) {
+            optionsContainer.querySelectorAll('.option').forEach(el => el.classList.remove('selected'));
+            selectedEl.classList.add('selected');
+        }
+
+        function checkAnswer() {
+            // Use the current index to retrieve the correct question
+            const qData = shuffledQuestions[currentQuestionIndex]; 
+            const rawCorrectAnswer = qData.answer;
+            const correctAnswer = rawCorrectAnswer.toLowerCase().trim();
+            let userAnswer = '';
+            let isCorrect = false;
+
+            if (qData.type === 'mcq' || qData.type === 'tf') {
+                const selectedEl = optionsContainer.querySelector('.option.selected');
+                
+                if (!selectedEl) {
+                    // Provide visual feedback if no answer is selected
+                    feedbackEl.textContent = "Please select an answer before checking.";
+                    feedbackEl.className = 'wrong';
+                    feedbackEl.classList.remove('hidden');
+                    return; 
+                }
+                
+                userAnswer = selectedEl.getAttribute('data-value');
+                isCorrect = (userAnswer === correctAnswer);
+                
+                // Show correct/wrong colors
+                optionsContainer.querySelectorAll('.option').forEach(el => {
+                    const optionValue = el.getAttribute('data-value');
+                    el.classList.add('disabled');
+                    if (optionValue === correctAnswer) {
+                        el.style.backgroundColor = '#d4edda'; // Highlight correct answer
+                    } else if (el.classList.contains('selected')) {
+                        el.style.backgroundColor = '#f8d7da'; // Highlight wrong selection
+                    }
+                });
+
+            } else if (qData.type === 'fill') {
+                userAnswer = fillInput.value.toLowerCase().trim();
+                
+                if (!userAnswer) {
+                    feedbackEl.textContent = "Please enter an answer before checking.";
+                    feedbackEl.className = 'wrong';
+                    feedbackEl.classList.remove('hidden');
+                    return;
+                }
+                
+                const normalizedUser = userAnswer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                const normalizedCorrect = correctAnswer.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                isCorrect = (normalizedUser === normalizedCorrect);
+                
+                fillInput.disabled = true;
+            }
+
+            // Display feedback
+            feedbackEl.classList.remove('hidden');
+            if (isCorrect) {
+                feedbackEl.classList.add('correct');
+                feedbackEl.classList.remove('wrong');
+                feedbackEl.innerHTML = '<p>✅ Correct!</p>';
+            } else {
+                feedbackEl.classList.add('wrong');
+                feedbackEl.classList.remove('correct');
+                feedbackEl.innerHTML = `<p>❌ Incorrect. The correct answer is: <strong>${rawCorrectAnswer}</strong></p>`;
+            }
+
+            // Move to the next index for the next question load
+            currentQuestionIndex++; 
+            
+            // Show controls for the next question
+            checkBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+        
+        // Initialize the test bank after the DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTestBank();
+        });
+    </script>
+</body>
+</html>
