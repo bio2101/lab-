@@ -14,7 +14,7 @@
             <div id="hud">
                 <a href="index.html" class="btn btn-secondary" style="margin: 0; padding: 8px 15px; font-size: 14px;">Home</a>
                 <h3>Total Questions: 30</h3>
-                <span id="timer" class="score-time">45:00</span>
+                <span id="timer" class="score-time">60:00</span>
             </div>
             
             <div id="results-container" class="hidden">
@@ -52,13 +52,12 @@
         const quizControls = document.getElementById('quiz-controls');
         
         const totalQuestions = 30;
-        const totalTime = 45 * 60; 
+        const totalTime = 60 * 60; // CHANGED to 60 minutes
         let timeLeft = totalTime;
         let timerInterval;
 
         // --- Utility Functions (for shuffling questions) ---
         function getRandomSubset(arr, size) {
-            // Check if arr is defined and is an array before attempting slice/sort
             if (!Array.isArray(arr) || arr.length === 0) return [];
             const shuffled = arr.slice(0).sort(() => 0.5 - Math.random());
             return shuffled.slice(0, size);
@@ -66,10 +65,9 @@
 
         // --- 1. Question Generation ---
         function generateTest() {
-            // Check for question data before proceeding
             if (typeof allQuestions === 'undefined' || !allQuestions.mcq || !allQuestions.tf || !allQuestions.fill) {
                 quizForm.innerHTML = "<h1>Error: Question data missing. Check questions.js file.</h1>";
-                clearInterval(timerInterval); // Stop timer if data fails
+                clearInterval(timerInterval);
                 return;
             }
 
@@ -141,7 +139,6 @@
             submitButton.disabled = true;
             quizControls.classList.add('hidden');
             
-            // Calculate time taken
             const timeTaken = totalTime - timeLeft;
             const minutes = Math.floor(timeTaken / 60);
             const seconds = timeTaken % 60;
@@ -156,7 +153,6 @@
                 let isCorrect = false;
                 let userAnswerRaw = '';
 
-                // Disable all inputs in the question block and collect user answer
                 block.querySelectorAll('input').forEach(input => {
                     input.disabled = true;
                     if (type !== 'fill' && input.checked) {
@@ -178,7 +174,6 @@
                     }
                 }
 
-                // Apply correct/wrong class for review styling
                 if (isCorrect) {
                     score++;
                     block.classList.add('review-correct');
@@ -186,7 +181,6 @@
                     block.classList.add('review-wrong');
                 }
                 
-                // Add feedback/correct answer text below the question
                 let feedbackHtml = '';
                 if (isCorrect) {
                     feedbackHtml = `<span class="feedback-text review-correct">✅ Correct!</span>`;
@@ -194,22 +188,17 @@
                     feedbackHtml = `<span class="feedback-text review-wrong">❌ Incorrect. Correct Answer: ${rawCorrectAnswer}</span>`;
                 }
                 
-                // Append feedback to the question block
                 block.querySelector('h3').insertAdjacentHTML('afterend', feedbackHtml);
             });
 
-            // Update Results Container
             const finalScorePercentage = ((score / totalQuestions) * 100).toFixed(1);
             document.getElementById('final-score').textContent = `Score: ${score} / ${totalQuestions} (${finalScorePercentage}%)`;
             document.getElementById('time-taken').textContent = `${minutes} min ${seconds} sec`;
             
-            // MOVE THE GRADED QUESTIONS TO THE REVIEW SECTION
             reviewSection.appendChild(quizForm); 
             
-            // Show results container
             resultsContainer.classList.remove('hidden');
             
-            // Scroll to the top to see the results
             window.scrollTo({ top: 0, behavior: 'smooth' }); 
         }
 
